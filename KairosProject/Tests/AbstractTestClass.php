@@ -134,11 +134,19 @@ abstract class AbstractTestClass extends TestCase
      *
      * Return an instance of tested class without constructor call
      *
+     * @param array $injection A set of property to be injected after instanciation
+     *
      * @return object
      */
-    protected function getInstance()
+    protected function getInstance(array $injection = [])
     {
-        return $this->classReflection->newInstanceWithoutConstructor();
+        $instance = $this->classReflection->newInstanceWithoutConstructor();
+
+        foreach ($injection as $property => $value) {
+            $this->getClassProperty($property)->setValue($instance, $value);
+        }
+
+        return $instance;
     }
 
     /**
