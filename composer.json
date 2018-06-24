@@ -1,0 +1,25 @@
+{
+	"name" : "kairos-project/tests",
+	"description" : "A simple phpunit test helper",
+	"type" : "library",
+	"require" : {
+		"phpunit/phpunit" : "^7"
+	},
+	"license" : "MIT",
+	"authors" : [{
+			"name" : "matthieu88160",
+			"email" : "matthieu.vallance@cscfa.fr"
+		}
+	],
+	"minimum-stability" : "stable",
+	"autoload-dev" : {
+		"psr-4" : {
+			"KairosProject\\Tests\\" : "KairosProject/Tests/"
+		}
+	},
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.0-dev"
+        }
+	}
+}
