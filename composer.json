@@ -5,6 +5,11 @@
 	"require" : {
 		"phpunit/phpunit" : "^7"
 	},
+	"require-dev": {
+		"phpmd/phpmd": "^2.6",
+		"squizlabs/php_codesniffer": "^3.4",
+		"sebastian/phpcpd": "^4"
+	},
 	"license" : "MIT",
 	"authors" : [{
 			"name" : "matthieu88160",

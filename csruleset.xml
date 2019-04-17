@@ -1,0 +1,88 @@
+<?xml version="1.0"?>
+<ruleset name="rules">
+	<description>The coding standard.</description>
+	<arg name="tab-width" value="4"/>
+	
+	<rule ref="PSR1"/>
+	<rule ref="PSR2"/>
+	
+	<rule ref="Generic.Files.LineLength">
+		<properties>
+			<property name="lineLimit" value="120"/>
+		    <property name="absoluteLineLimit" value="130"/>
+	    </properties>
+	</rule>
+	
+	<rule ref="PEAR.Commenting"/>
+	<rule ref="PEAR.Classes"/>
+	<rule ref="PEAR.ControlStructures"/>
+	<rule ref="PEAR.Files"/>
+	<rule ref="PEAR.Formatting"/>
+	<rule ref="PEAR.Functions"/>
+	<rule ref="PEAR.ControlStructures"/>
+	<rule ref="PEAR.WhiteSpace.ScopeClosingBrace"/>
+	<rule ref="PEAR.WhiteSpace.ObjectOperatorIndent"/>
+	
+	<rule ref="Generic.Arrays.DisallowLongArraySyntax"/>
+	<rule ref="Generic.Classes.DuplicateClassName"/>
+	<rule ref="Generic.CodeAnalysis"/>
+	<rule ref="Generic.Commenting"/>
+	<rule ref="Generic.ControlStructures"/>
+	<rule ref="Generic.Debug"/>
+	<rule ref="Generic.Files.ByteOrderMark"/>
+	<rule ref="Generic.Files.EndFileNewline"/>
+	<rule ref="Generic.Files.InlineHTML"/>
+	<rule ref="Generic.Files.OneClassPerFile"/>
+	<rule ref="Generic.Files.OneInterfacePerFile"/>
+	<rule ref="Generic.Files.OneTraitPerFile"/>
+	<rule ref="Generic.Formatting.NoSpaceAfterCast"/>
+	<rule ref="Generic.Formatting.DisallowMultipleStatements"/>
+	<rule ref="Generic.Functions.CallTimePassByReference"/>
+	<rule ref="Generic.Functions.FunctionCallArgumentSpacing"/>
+	<rule ref="Generic.Metrics"/>
+	<rule ref="Generic.NamingConventions"/>
+	<rule ref="Generic.PHP.BacktickOperator"/>
+	<rule ref="Generic.PHP.CharacterBeforePHPOpeningTag"/>
+	<rule ref="Generic.PHP.DeprecatedFunctions"/>
+	<rule ref="Generic.PHP.DisallowAlternativePHPTags"/>
+	<rule ref="Generic.PHP.DisallowShortOpenTag"/>
+	<rule ref="Generic.PHP.ForbiddenFunctions"/>
+	<rule ref="Generic.PHP.LowerCaseConstant"/>
+	<rule ref="Generic.PHP.LowerCaseKeyword"/>
+	<rule ref="Generic.PHP.NoSilencedErrors"/>
+	<rule ref="Generic.PHP.SAPIUsage"/>
+    <rule ref="Generic.PHP.Syntax"/>
+    <rule ref="Generic.Strings"/>
+    <rule ref="Generic.VersionControl"/>
+    <rule ref="Generic.WhiteSpace.DisallowTabIndent"/>
+    <rule ref="Generic.WhiteSpace.ScopeIndent"/>
+	
+    <rule ref="Squiz.Functions.GlobalFunction"/> 
+    <rule ref="Squiz.Classes"/> 
+    <rule ref="Squiz.Debug"/> 
+    <rule ref="Squiz.Formatting"/> 
+    <rule ref="Squiz.Functions"/> 
+    <rule ref="Squiz.Objects.DisallowObjectStringIndex"/>
+    <rule ref="Squiz.Objects.ObjectMemberComma"/> 
+    <rule ref="Squiz.Operators.IncrementDecrementUsage"/>
+    <rule ref="Squiz.PHP">
+        <exclude name="Squiz.PHP.NonExecutableCode"/>
+        <exclude name="Squiz.PHP.DisallowBooleanStatement"/>
+        <exclude name="Squiz.PHP.DisallowInlineIf"/>
+        <exclude name="Squiz.PHP.DisallowComparisonAssignment"/>
+    </rule> 
+    <rule ref="Squiz.Scope"/>
+    <rule ref="Squiz.Strings"/>
+	
+	<rule ref="PSR2.Files.EndFileNewline"/>
+	
+	<rule ref="Zend.Files.ClosingTag"/>
+	<rule ref="Zend.Debug.CodeAnalyzer"/>
+	
+	<rule ref="Generic.Files.LineEndings">
+		<properties>
+            <property name="eolChar" value="\n"/>
+		</properties>
+	</rule>
+
+</ruleset>

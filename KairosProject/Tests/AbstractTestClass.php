@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 /**
- * This file is part of the chronos project.
+ * This file is part of the Kairos project.
  *
  * As each files provides by the CSCFA, this file is licensed
  * under the MIT license.
@@ -14,12 +14,17 @@ declare(strict_types=1);
  * @license  MIT <https://opensource.org/licenses/MIT>
  * @link     http://cscfa.fr
  */
+
 namespace KairosProject\Tests;
 
-use PHPUnit\Framework\TestCase;
-use PHPUnit\Framework\MockObject\MockObject;
-use PHPUnit\Framework\MockObject\Matcher\Invocation;
 use PHPUnit\Framework\MockObject\Builder\InvocationMocker;
+use PHPUnit\Framework\MockObject\Matcher\Invocation;
+use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\TestCase;
+use ReflectionClass;
+use ReflectionException;
+use ReflectionMethod;
+use ReflectionProperty;
 
 /**
  * Abstract test class
@@ -40,7 +45,7 @@ abstract class AbstractTestClass extends TestCase
      *
      * The tested class reflection to be stored and used during test
      *
-     * @var \ReflectionClass
+     * @var ReflectionClass
      */
     protected $classReflection;
 
@@ -49,13 +54,23 @@ abstract class AbstractTestClass extends TestCase
      *
      * This method is called before each test.
      *
-     * @see    \PHPUnit\Framework\TestCase::setUp()
      * @return void
+     * @throws ReflectionException
+     * @see    \PHPUnit\Framework\TestCase::setUp()
      */
     protected function setUp()
     {
-        $this->classReflection = new \ReflectionClass($this->getTestedClass());
+        $this->classReflection = new ReflectionClass($this->getTestedClass());
     }
+
+    /**
+     * Get tested class
+     *
+     * Return the tested class name
+     *
+     * @return string
+     */
+    abstract protected function getTestedClass(): string;
 
     /**
      * Get invocation builder
@@ -68,37 +83,46 @@ abstract class AbstractTestClass extends TestCase
      *
      * @return InvocationMocker
      */
-    protected function getInvocationBuilder(MockObject $mock, Invocation $count, string $method) : InvocationMocker
+    protected function getInvocationBuilder(MockObject $mock, Invocation $count, string $method): InvocationMocker
     {
         return $mock->expects($count)->method($method);
     }
 
     /**
-     * Get class property
+     * Assert has simple accessor
      *
-     * Return an instance of ReflectionProperty for a given property name
+     * Validate the getter and setter as simple ones for the given property, with the given value
      *
-     * @param string $property   The property name to reflex
-     * @param bool   $accessible The accessibility state of the property
+     * @param string $property The property to validate
+     * @param mixed  $value    The value to use with getter and setter
      *
-     * @return \ReflectionProperty
+     * @return void
+     * @throws ReflectionException
      */
-    protected function getClassProperty(string $property, bool $accessible = true) : ?\ReflectionProperty
+    protected function assertHasSimpleAccessor(string $property, $value): void
     {
-        $property = $this->createPropertyReflection($this->classReflection->getName(), $property);
+        $getter = sprintf('get%s', ucfirst($property));
+        $this->assertPublicMethod($getter);
+        $this->assertIsSimpleGetter($property, $getter, $value);
 
-        if (!$property) {
-            $this->fail(
-                sprintf(
-                    'The class "%s" is expected to store the property "%s"',
-                    $this->getTestedClass(),
-                    $property
-                )
-            );
-        }
-        $property->setAccessible($accessible);
+        $setter = sprintf('set%s', ucfirst($property));
+        $this->assertPublicMethod($setter);
+        $this->assertIsSimpleSetter($property, $setter, $value);
+    }
 
-        return $property;
+    /**
+     * Assert public method
+     *
+     * Assert a method to be public in current tested class
+     *
+     * @param string $methodName The method name
+     *
+     * @return void
+     * @throws ReflectionException
+     */
+    protected function assertPublicMethod(string $methodName): void
+    {
+        $this->assertTrue($this->getClassMethod($methodName)->isPublic());
     }
 
     /**
@@ -109,9 +133,10 @@ abstract class AbstractTestClass extends TestCase
      * @param string $method     The method name to reflex
      * @param bool   $accessible The accessibility state of the property
      *
-     * @return \ReflectionMethod|null
+     * @return ReflectionMethod|null
+     * @throws ReflectionException
      */
-    protected function getClassMethod(string $method, bool $accessible = true) : ?\ReflectionMethod
+    protected function getClassMethod(string $method, bool $accessible = true): ?ReflectionMethod
     {
         $method = $this->createMethodReflection($this->classReflection->getName(), $method);
 
@@ -130,105 +155,32 @@ abstract class AbstractTestClass extends TestCase
     }
 
     /**
-     * Get instance
+     * Create method reflection
      *
-     * Return an instance of tested class without constructor call
+     * Return a reflection method, according to the instance class name and mathod. Abble to follow the
+     * inheritance tree to find the property.
      *
-     * @param array $injection A set of property to be injected after instanciation
+     * @param string $instanceClassName The base instance class name
+     * @param string $method            The method name to find
      *
-     * @return object
+     * @return ReflectionMethod|NULL
+     * @throws ReflectionException
      */
-    protected function getInstance(array $injection = [])
+    private function createMethodReflection(string $instanceClassName, string $method): ?ReflectionMethod
     {
-        $instance = $this->classReflection->newInstanceWithoutConstructor();
+        $reflectionClass = new ReflectionClass($instanceClassName);
 
-        foreach ($injection as $property => $value) {
-            $this->getClassProperty($property)->setValue($instance, $value);
+        if ($reflectionClass->hasMethod($method)) {
+            $methodReflection = $reflectionClass->getMethod($method);
+            return $methodReflection;
         }
 
-        return $instance;
-    }
-
-    /**
-     * Assert has simple accessor
-     *
-     * Validate the getter and setter as simple ones for the given property, with the given value
-     *
-     * @param string $property The property to validate
-     * @param mixed  $value    The value to use with getter and setter
-     *
-     * @return void
-     */
-    protected function assertHasSimpleAccessor(string $property, $value) : void
-    {
-        $getter = sprintf('get%s', ucfirst($property));
-        $this->assertPublicMethod($getter);
-        $this->assertIsSimpleGetter($property, $getter, $value);
-
-        $setter = sprintf('set%s', ucfirst($property));
-        $this->assertPublicMethod($setter);
-        $this->assertIsSimpleSetter($property, $setter, $value);
-    }
-
-    /**
-     * Assert is simple setter
-     *
-     * Validate the given method is a simple setter method. Assert the returned value of the method is the instance,
-     * and the value is injected into the property.
-     *
-     * @param string $property The property name
-     * @param string $method   The getter method
-     * @param mixed  $value    The injected value
-     *
-     * @return void
-     */
-    protected function assertIsSimpleSetter(string $property, string $method, $value) : void
-    {
-        $this->assertIsSetter($property, $method, $value, $value);
-
-        return;
-    }
-
-    /**
-     * Assert is setter
-     *
-     * Validate the given method is a setter method. Assert the returned value of the method is the instance,
-     * and the value is injected into the property. Allow the injected value to be modifyed during process.
-     *
-     * @param string $property The property name
-     * @param string $method   The getter method
-     * @param mixed  $value    The injected value
-     * @param mixed  $expected The final injected value
-     *
-     * @return void
-     */
-    protected function assertIsSetter(string $property, string $method, $value, $expected) : void
-    {
-        $isSame = substr($property, 0, strlen('same:')) == 'same:';
-        if ($isSame) {
-            $property = substr($property, strlen('same:'));
+        $parentClass = $reflectionClass->getParentClass();
+        if (!$parentClass) {
+            return null;
         }
 
-        $propertyReflex = $this->getClassProperty($property);
-        $instance = $this->getInstance();
-
-        $method = $this->getClassMethod($method, false);
-        $this->assertTrue(
-            $method->isPublic(),
-            sprintf(
-                'The method "%s" of class "%s" is expected to be public',
-                $method,
-                $this->getTestedClass()
-            )
-        );
-        $this->assertSame($instance, $method->invoke($instance, $value));
-
-        if ($isSame) {
-            $this->assertSame($expected, $propertyReflex->getValue($instance));
-            return;
-        }
-        $this->assertEquals($expected, $propertyReflex->getValue($instance));
-        return;
+        return $this->createMethodReflection($parentClass->getName(), $method);
     }
 
     /**
@@ -241,8 +193,9 @@ abstract class AbstractTestClass extends TestCase
      * @param mixed  $value    The returned value
      *
      * @return void
+     * @throws ReflectionException
      */
-    protected function assertIsSimpleGetter(string $property, string $method, $value) : void
+    protected function assertIsSimpleGetter(string $property, string $method, $value): void
     {
         $this->assertIsGetter($property, $method, $value, $value);
 
@@ -261,8 +214,9 @@ abstract class AbstractTestClass extends TestCase
      * @param mixed  $expected The returned value
      *
      * @return void
+     * @throws ReflectionException
      */
-    protected function assertIsGetter(string $property, string $method, $value, $expected) : void
+    protected function assertIsGetter(string $property, string $method, $value, $expected): void
     {
         $isSame = substr($property, 0, strlen('same:')) == 'same:';
         if ($isSame) {
@@ -293,6 +247,148 @@ abstract class AbstractTestClass extends TestCase
     }
 
     /**
+     * Get instance
+     *
+     * Return an instance of tested class without constructor call
+     *
+     * @param array $injection A set of property to be injected after instanciation
+     *
+     * @return object
+     * @throws ReflectionException
+     */
+    protected function getInstance(array $injection = [])
+    {
+        $instance = $this->classReflection->newInstanceWithoutConstructor();
+
+        foreach ($injection as $property => $value) {
+            $this->getClassProperty($property)->setValue($instance, $value);
+        }
+
+        return $instance;
+    }
+
+    /**
+     * Get class property
+     *
+     * Return an instance of ReflectionProperty for a given property name
+     *
+     * @param string $property   The property name to reflex
+     * @param bool   $accessible The accessibility state of the property
+     *
+     * @return ReflectionProperty
+     * @throws ReflectionException
+     */
+    protected function getClassProperty(string $property, bool $accessible = true): ?ReflectionProperty
+    {
+        $property = $this->createPropertyReflection($this->classReflection->getName(), $property);
+
+        if (!$property) {
+            $this->fail(
+                sprintf(
+                    'The class "%s" is expected to store the property "%s"',
+                    $this->getTestedClass(),
+                    $property
+                )
+            );
+        }
+        $property->setAccessible($accessible);
+
+        return $property;
+    }
+
+    /**
+     * Create property reflection
+     *
+     * Return a reflection property, according to the instance class name and property. Abble to follow the
+     * inheritance tree to find the property.
+     *
+     * @param string $instanceClassName The base instance class name
+     * @param string $property          The property name to find
+     *
+     * @return ReflectionProperty|NULL
+     * @throws ReflectionException
+     */
+    protected function createPropertyReflection(string $instanceClassName, string $property): ?ReflectionProperty
+    {
+        $reflectionClass = new ReflectionClass($instanceClassName);
+
+        if ($reflectionClass->hasProperty($property)) {
+            $propertyReflection = $reflectionClass->getProperty($property);
+            return $propertyReflection;
+        }
+
+        $parentClass = $reflectionClass->getParentClass();
+        if (!$parentClass) {
+            return null;
+        }
+
+        return $this->createPropertyReflection($parentClass->getName(), $property);
+    }
+
+    /**
+     * Assert is simple setter
+     *
+     * Validate the given method is a simple setter method. Assert the returned value of the method is the instance,
+     * and the value is injected into the property.
+     *
+     * @param string $property The property name
+     * @param string $method   The getter method
+     * @param mixed  $value    The injected value
+     *
+     * @return void
+     * @throws ReflectionException
+     */
+    protected function assertIsSimpleSetter(string $property, string $method, $value): void
+    {
+        $this->assertIsSetter($property, $method, $value, $value);
+
+        return;
+    }
+
+    /**
+     * Assert is setter
+     *
+     * Validate the given method is a setter method. Assert the returned value of the method is the instance,
+     * and the value is injected into the property. Allow the injected value to be modifyed during process.
+     *
+     * @param string $property The property name
+     * @param string $method   The getter method
+     * @param mixed  $value    The injected value
+     * @param mixed  $expected The final injected value
+     *
+     * @return void
+     * @throws ReflectionException
+     */
+    protected function assertIsSetter(string $property, string $method, $value, $expected): void
+    {
+        $isSame = substr($property, 0, strlen('same:')) == 'same:';
+        if ($isSame) {
+            $property = substr($property, strlen('same:'));
+        }
+
+        $propertyReflex = $this->getClassProperty($property);
+        $instance = $this->getInstance();
+
+        $method = $this->getClassMethod($method, false);
+        $this->assertTrue(
+            $method->isPublic(),
+            sprintf(
+                'The method "%s" of class "%s" is expected to be public',
+                $method,
+                $this->getTestedClass()
+            )
+        );
+        $this->assertSame($instance, $method->invoke($instance, $value));
+
+        if ($isSame) {
+            $this->assertSame($expected, $propertyReflex->getValue($instance));
+            return;
+        }
+        $this->assertEquals($expected, $propertyReflex->getValue($instance));
+        return;
+    }
+
+    /**
      * Assert constructor
      *
      * Validate the tested instance constructor. If property is prefixed by 'same:', the assert same
@@ -302,6 +398,7 @@ abstract class AbstractTestClass extends TestCase
      * @param array $optionals            The optionals constructor arguments
      *
      * @return  void
+     * @throws  ReflectionException
      * @example <pre>
      *  assertConstructor(['injectedProperty', 'value'], ['injectedProperty', 'optionalValue']);
      *  assertConstructor(['same:property', Mock]);
@@ -324,20 +421,6 @@ abstract class AbstractTestClass extends TestCase
     }
 
     /**
-     * Assert public method
-     *
-     * Assert a method to be public in current tested class
-     *
-     * @param string $methodName The method name
-     *
-     * @return void
-     */
-    protected function assertPublicMethod(string $methodName) : void
-    {
-        $this->assertTrue($this->getClassMethod($methodName)->isPublic());
-    }
-
-    /**
      * Assert protected method
      *
      * Assert a method to be protected in current tested class
@@ -345,8 +428,9 @@ abstract class AbstractTestClass extends TestCase
      * @param string $methodName The method name
      *
      * @return void
+     * @throws ReflectionException
      */
-    protected function assertProtectedMethod(string $methodName) : void
+    protected function assertProtectedMethod(string $methodName): void
     {
         $this->assertTrue($this->getClassMethod($methodName)->isProtected());
     }
@@ -359,74 +443,10 @@ abstract class AbstractTestClass extends TestCase
      * @param string $methodName The method name
      *
      * @return void
+     * @throws ReflectionException
      */
-    protected function assertPrivateMethod(string $methodName) : void
+    protected function assertPrivateMethod(string $methodName): void
     {
         $this->assertTrue($this->getClassMethod($methodName)->isPrivate());
     }
-
-    /**
-     * Create property reflection
-     *
-     * Return a reflection property, according to the instance class name and property. Abble to follow the
-     * inheritance tree to find the property.
-     *
-     * @param string $instanceClassName The base instance class name
-     * @param string $property          The property name to find
-     *
-     * @return \ReflectionProperty|NULL
-     */
-    protected function createPropertyReflection(string $instanceClassName, string $property) : ?\ReflectionProperty
-    {
-        $reflectionClass = new \ReflectionClass($instanceClassName);
-
-        if ($reflectionClass->hasProperty($property)) {
-            $propertyReflection = $reflectionClass->getProperty($property);
-            return $propertyReflection;
-        }
-
-        $parentClass = $reflectionClass->getParentClass();
-        if (!$parentClass) {
-            return null;
-        }
-
-        return $this->createPropertyReflection($parentClass->getName(), $property);
-    }
-
-    /**
-     * Create method reflection
-     *
-     * Return a reflection method, according to the instance class name and mathod. Abble to follow the
-     * inheritance tree to find the property.
-     *
-     * @param string $instanceClassName The base instance class name
-     * @param string $method            The method name to find
-     *
-     * @return \ReflectionMethod|NULL
-     */
-    private function createMethodReflection(string $instanceClassName, string $method) : ?\ReflectionMethod
-    {
-        $reflectionClass = new \ReflectionClass($instanceClassName);
-
-        if ($reflectionClass->hasMethod($method)) {
-            $methodReflection = $reflectionClass->getMethod($method);
-            return $methodReflection;
-        }
-
-        $parentClass = $reflectionClass->getParentClass();
-        if (!$parentClass) {
-            return null;
-        }
-
-        return $this->createMethodReflection($parentClass->getName(), $method);
-    }
-
-    /**
-     * Get tested class
-     *
-     * Return the tested class name
-     *
-     * @return string
-     */
-    abstract protected function getTestedClass() : string;
 }
