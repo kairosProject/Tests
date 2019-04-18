@@ -77,9 +77,9 @@ abstract class AbstractTestClass extends TestCase
      *
      * Create an invocation builder base on an invocation specification
      *
-     * @param MockObject $mock   The base mock object
-     * @param Invocation $count  The invocation count
-     * @param string     $method The method name
+     * @param MockObject $mock The base mock object
+     * @param Invocation $count The invocation count
+     * @param string $method The method name
      *
      * @return InvocationMocker
      */
@@ -94,7 +94,7 @@ abstract class AbstractTestClass extends TestCase
      * Validate the getter and setter as simple ones for the given property, with the given value
      *
      * @param string $property The property to validate
-     * @param mixed  $value    The value to use with getter and setter
+     * @param mixed $value The value to use with getter and setter
      *
      * @return void
      * @throws ReflectionException
@@ -130,8 +130,8 @@ abstract class AbstractTestClass extends TestCase
      *
      * Return an instance of ReflectionMethod for a given method name
      *
-     * @param string $method     The method name to reflex
-     * @param bool   $accessible The accessibility state of the property
+     * @param string $method The method name to reflex
+     * @param bool $accessible The accessibility state of the property
      *
      * @return ReflectionMethod|null
      * @throws ReflectionException
@@ -161,7 +161,7 @@ abstract class AbstractTestClass extends TestCase
      * inheritance tree to find the property.
      *
      * @param string $instanceClassName The base instance class name
-     * @param string $method            The method name to find
+     * @param string $method The method name to find
      *
      * @return ReflectionMethod|NULL
      * @throws ReflectionException
@@ -189,8 +189,8 @@ abstract class AbstractTestClass extends TestCase
      * Validate the given method is a simple getter method and return the given value from the given property
      *
      * @param string $property The property name
-     * @param string $method   The getter method
-     * @param mixed  $value    The returned value
+     * @param string $method The getter method
+     * @param mixed $value The returned value
      *
      * @return void
      * @throws ReflectionException
@@ -209,9 +209,9 @@ abstract class AbstractTestClass extends TestCase
      * the given value is injected into the property
      *
      * @param string $property The property name
-     * @param string $method   The getter method
-     * @param mixed  $value    The injected value
-     * @param mixed  $expected The returned value
+     * @param string $method The getter method
+     * @param mixed $value The injected value
+     * @param mixed $expected The returned value
      *
      * @return void
      * @throws ReflectionException
@@ -247,33 +247,12 @@ abstract class AbstractTestClass extends TestCase
     }
 
     /**
-     * Get instance
-     *
-     * Return an instance of tested class without constructor call
-     *
-     * @param array $injection A set of property to be injected after instanciation
-     *
-     * @return object
-     * @throws ReflectionException
-     */
-    protected function getInstance(array $injection = [])
-    {
-        $instance = $this->classReflection->newInstanceWithoutConstructor();
-
-        foreach ($injection as $property => $value) {
-            $this->getClassProperty($property)->setValue($instance, $value);
-        }
-
-        return $instance;
-    }
-
-    /**
      * Get class property
      *
      * Return an instance of ReflectionProperty for a given property name
      *
-     * @param string $property   The property name to reflex
-     * @param bool   $accessible The accessibility state of the property
+     * @param string $property The property name to reflex
+     * @param bool $accessible The accessibility state of the property
      *
      * @return ReflectionProperty
      * @throws ReflectionException
@@ -303,7 +282,7 @@ abstract class AbstractTestClass extends TestCase
      * inheritance tree to find the property.
      *
      * @param string $instanceClassName The base instance class name
-     * @param string $property          The property name to find
+     * @param string $property The property name to find
      *
      * @return ReflectionProperty|NULL
      * @throws ReflectionException
@@ -326,14 +305,35 @@ abstract class AbstractTestClass extends TestCase
     }
 
     /**
+     * Get instance
+     *
+     * Return an instance of tested class without constructor call
+     *
+     * @param array $injection A set of property to be injected after instantiation
+     *
+     * @return object
+     * @throws ReflectionException
+     */
+    protected function getInstance(array $injection = [])
+    {
+        $instance = $this->classReflection->newInstanceWithoutConstructor();
+
+        foreach ($injection as $property => $value) {
+            $this->getClassProperty($property)->setValue($instance, $value);
+        }
+
+        return $instance;
+    }
+
+    /**
      * Assert is simple setter
      *
      * Validate the given method is a simple setter method. Assert the returned value of the method is the instance,
      * and the value is injected into the property.
      *
      * @param string $property The property name
-     * @param string $method   The getter method
-     * @param mixed  $value    The injected value
+     * @param string $method The getter method
+     * @param mixed $value The injected value
      *
      * @return void
      * @throws ReflectionException
@@ -352,9 +352,9 @@ abstract class AbstractTestClass extends TestCase
      * and the value is injected into the property. Allow the injected value to be modifyed during process.
      *
      * @param string $property The property name
-     * @param string $method   The getter method
-     * @param mixed  $value    The injected value
-     * @param mixed  $expected The final injected value
+     * @param string $method The getter method
+     * @param mixed $value The injected value
+     * @param mixed $expected The final injected value
      *
      * @return void
      * @throws ReflectionException
@@ -395,7 +395,7 @@ abstract class AbstractTestClass extends TestCase
      * is used to validate the injected value.
      *
      * @param array $constructorArguments The constructor call arguments
-     * @param array $optionals            The optionals constructor arguments
+     * @param array $optionals The optionals constructor arguments
      *
      * @return  void
      * @throws  ReflectionException
