@@ -6,6 +6,44 @@ constructor testing, getters and setters, etc...
 
 ## Basic usage
 
+The test helper library is designed to automate the tests for basic logic elements. These basics elements will be the
+simple constructor testing, the getter/setter or more abstractly accessor tests, and finally the instance construction
+without requirements.
+
+To be used, the test case has to extends the `AbstractTestClass` class, and define the tested class. 
+
+```php
+class MyClassTest extends AbstractTestClass
+{
+    /**
+     * Get tested class
+     *
+     * Return the tested class name
+     *
+     * @return string
+     */
+    protected function getTestedClass(): string
+    {
+        return ConfigurationDefinition::class;
+    }
+}
+```
+
+### Constructor test
+
+First of all is the constructor test. To validate the construction of an instance, its necessary to test multiples
+cases:
+ * The parameter assignation
+ * The parameter default value
+
+To do this, the `assertConstructor()` method allow two arguments as array. The first array will contain the name of
+the property expected to be assigned as key and the value to assign as value, representing the given arguments in the
+same order as the call. The second array will have the same structure and represent the default value of the
+properties.
+
+To test the value assignment as reference (useful for object), the the property have to be prefixed by the `same:`
+keyword.
+
 ```php
 class MyClassTest extends AbstractTestClass
 {
@@ -37,6 +75,18 @@ class MyClassTest extends AbstractTestClass
         );
     }
     
+    [...]
+}
+```
+
+### Access a protected or private method
+
+To access a private or protected method, the `getClassMethod('name')` can be used. It will return an instance of 
+ReflectionMethod configured to be accessible by default. 
+
+```php
+class MyClassTest extends AbstractTestClass
+{
     /**
      * Test method
      *
@@ -48,13 +98,30 @@ class MyClassTest extends AbstractTestClass
     {
         $instance = $this->getInstance();
         $this->assertProtectedMethod('methodName');
-        $method = $this->getClassMethod('methodName', true);
+        $method = $this->getClassMethod('methodName');
 
         $result = $method->invoke($instance);
 
         $this->assertEquals('The expected result', $result);
     }
+    
+    [...]
+}
+```
 
+### Test a simple getter or a simple setter
+
+The simple getters and setters are a common practice to access private or protected properties in an object. To 
+validate that a property is correctly assigned or returned, then the 
+`assertIsSimpleGetter('property', 'getterMethodName', 'value')` or the 
+`assertIsSimpleSetter('property', 'getterMethodName', 'value')` methods can be used.
+
+If you want to test both at the same time, then it is possible to use the 
+`assertHasSimpleAccessor('property', 'value')` method.
+
+```php
+class MyClassTest extends AbstractTestClass
+{
     /**
      * Test getProperty.
      *
@@ -83,7 +150,20 @@ class MyClassTest extends AbstractTestClass
     {
         $this->assertHasSimpleAccessor('property', $this->createMock(\stdClass::class));
     }
+    
+    [...]
+}
+```
 
+### Get a fresh instance without calling the constructor
+
+As we don't want to test the constructor for each tests, it is possible to get a fresh instance by calling the 
+`getInstance()` method. The argument of this method is optional and can be used to set the dependencies directly
+inside the properties, using the ReflectionProperty instead of the constructor or the setters.
+
+```php
+class MyClassTest extends AbstractTestClass
+{
     /**
      * Test for process.
      *
@@ -102,22 +182,15 @@ class MyClassTest extends AbstractTestClass
 
         $this->assertEquals(42, $instance->process());
     }
-
-    /**
-     * Get tested class
-     *
-     * Return the tested class name
-     *
-     * @return string
-     */
-    protected function getTestedClass(): string
-    {
-        return ConfigurationDefinition::class;
-    }
+    
+    [...]
 }
 ```
 
 ## Get invocation builder to configure mock calls
+
+To create a new InvocationBuilder instance, the `getInvocationBuilder($mock, new Invocation(), 'methodName')` can be
+used. This method is nothing more than a helper for `$mock->expect($count)->method('methodName')`; 
 
 ```php
 class MyClassTest extends AbstractTestClass
@@ -144,17 +217,7 @@ class MyClassTest extends AbstractTestClass
         
         $this->getInstance(['logger' => $logger])->routine();
     }
-
-    /**
-     * Get tested class
-     *
-     * Return the tested class name
-     *
-     * @return string
-     */
-    protected function getTestedClass(): string
-    {
-        return ConfigurationDefinition::class;
-    }
+    
+    [...]
 }
 ```
