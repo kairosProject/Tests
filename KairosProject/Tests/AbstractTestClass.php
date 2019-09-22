@@ -14,7 +14,6 @@ declare(strict_types=1);
  * @license  MIT <https://opensource.org/licenses/MIT>
  * @link     http://cscfa.fr
  */
-
 namespace KairosProject\Tests;
 
 use PHPUnit\Framework\MockObject\Builder\InvocationMocker;
@@ -58,7 +57,7 @@ abstract class AbstractTestClass extends TestCase
      * @throws ReflectionException
      * @see    \PHPUnit\Framework\TestCase::setUp()
      */
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->classReflection = new ReflectionClass($this->getTestedClass());
     }
