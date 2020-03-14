@@ -23,7 +23,12 @@
 			"KairosProject\\Tests\\" : "KairosProject/Tests/"
 		}
 	},
-    "extra": {
+	"autoload-dev": {
+		"psr-4": {
+			"KairosProject\\Tests\\Test\\": "Test/"
+		}
+	},
+	"extra": {
         "branch-alias": {
             "dev-master": "2.0-dev"
         }

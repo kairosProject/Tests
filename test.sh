@@ -81,6 +81,9 @@ echo "$TEST_RES" > doc/composer.txt
 do_test "$PHP_PATH vendor/bin/phpmd $SOURCE_PATH text ./phpmd.xml" PHPMD 100
 echo "$TEST_RES" > doc/phpmd.txt
 
+do_test "$PHP_PATH vendor/bin/phpunit" PHPUNIT 100
+echo "$TEST_RES" > doc/phpunit.txt
+
 do_test "$PHP_PATH vendor/bin/phpcpd $SOURCE_PATH" PHPCPD 1
 echo "$TEST_RES" > doc/phpcpd.txt
 
