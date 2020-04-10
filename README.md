@@ -221,3 +221,37 @@ class MyClassTest extends AbstractTestClass
     [...]
 }
 ```
+
+## Bulk properties content validation
+
+To validate the value stored by a set of property, use the `assertPropertiesSame` and `assertPropertiesEqual` methods.
+
+```php
+class MyClassTest extends AbstractTestClass
+{
+    /**
+     * Test set data
+     *
+     * Validate the data setter of some class
+     *
+     * @return void
+     */
+    public function testContent(): void
+    {
+        $instance = $this->getInstance();
+        $date = new \DateTime();
+        
+        $instance->setSubject('Test subject');
+        $instance->setEmail('matthieu.vallance@exemple.org');
+        $instance->setDate($date);
+
+        $this->assertPropertiesSame($instance, ['date' => $date]);
+        $this->assertPropertiesEquals(
+            $instance, 
+            ['subject' => 'Test subject', 'email' => 'matthieu.vallance@exemple.org']
+        );
+    }
+    
+    [...]
+}
+```
