@@ -18,12 +18,8 @@ namespace KairosProject\Tests\Test\Accessor;
 
 use KairosProject\Tests\AbstractTestClass;
 use KairosProject\Tests\Test\Stub\AccessorClass;
-use KairosProject\Tests\Test\Stub\IsserClass;
 use KairosProject\Tests\Test\Stub\MethodClass;
 use PHPUnit\Framework\AssertionFailedError;
-use PHPUnit\Framework\MockObject\Matcher;
-use PHPUnit\Framework\MockObject\Rule\InvokedCount;
-use PHPUnit\Framework\MockObject\Rule\MethodName;
 use ReflectionException;
 use stdClass;
 
@@ -42,6 +38,60 @@ use stdClass;
  */
 class Test extends AbstractTestClass
 {
+    /**
+     * Test assertPropertiesSame
+     *
+     * Validate the assertPropertiesSame method of the tested class
+     *
+     * @throws ReflectionException
+     * @return void
+     */
+    public function testAssertPropertiesSame(): void
+    {
+        $stdClass = new stdClass();
+        $injection = ['accessorProperty' => $stdClass, 'getterProperty' => true, 'setterProperty' => 12];
+
+        $this->assertPropertiesSame($this->getInstance($injection), $injection);
+
+        try {
+            $this->assertPropertiesSame(
+                $this->getInstance($injection),
+                ['accessorProperty' => new stdClass(), 'getterProperty' => true, 'setterProperty' => 12]
+            );
+            $this->fail();
+        } catch(AssertionFailedError $exception) {
+            $this->assertTrue(true);
+        }
+    }
+
+    /**
+     * Test assertPropertiesEqual
+     *
+     * Validate the assertPropertiesEqual method of the tested class
+     *
+     * @throws ReflectionException
+     * @return void
+     */
+    public function testAssertPropertiesEqual(): void
+    {
+        $injection = ['accessorProperty' => new stdClass(), 'getterProperty' => true, 'setterProperty' => 12];
+
+        $this->assertPropertiesEqual(
+            $this->getInstance($injection),
+            ['accessorProperty' => new stdClass(), 'getterProperty' => true, 'setterProperty' => 12]
+        );
+
+        try {
+            $this->assertPropertiesEqual(
+                $this->getInstance($injection),
+                ['accessorProperty' => new stdClass(), 'getterProperty' => true, 'setterProperty' => 15]
+            );
+            $this->fail();
+        } catch(AssertionFailedError $exception) {
+            $this->assertTrue(true);
+        }
+    }
+
     /**
      * Test hasSimpleAccessor
      *

@@ -3,7 +3,7 @@
 	"description" : "A simple phpunit test helper",
 	"type" : "library",
 	"require" : {
-		"php": "^7.1",
+		"php": "^7.2",
 		"phpunit/phpunit" : "^8"
 	},
 	"require-dev": {
@@ -30,7 +30,7 @@
 	},
 	"extra": {
         "branch-alias": {
-            "dev-master": "2.0-dev"
+            "dev-master": "2.1-dev"
         }
 	}
 }

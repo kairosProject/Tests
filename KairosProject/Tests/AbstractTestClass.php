@@ -434,6 +434,48 @@ abstract class AbstractTestClass extends TestCase
     }
 
     /**
+     * Assert properties equals
+     *
+     * Validate the properties are equals than expected property value map
+     *
+     * @param object $instance      The instance to validate
+     * @param array  $propertyValue The property value associative array
+     *
+     * @throws ReflectionException
+     * @return void
+     */
+    public function assertPropertiesEqual($instance, array $propertyValue): void
+    {
+        foreach ($propertyValue as $property => $value) {
+            $this->assertEquals(
+                $value,
+                $this->getClassProperty($property)->getValue($instance)
+            );
+        }
+    }
+
+    /**
+     * Assert properties same
+     *
+     * Validate the properties are same than expected property value map
+     *
+     * @param object $instance      The instance to validate
+     * @param array  $propertyValue The property value associative array
+     *
+     * @throws ReflectionException
+     * @return void
+     */
+    public function assertPropertiesSame($instance, array $propertyValue): void
+    {
+        foreach ($propertyValue as $property => $value) {
+            $this->assertSame(
+                $value,
+                $this->getClassProperty($property)->getValue($instance)
+            );
+        }
+    }
+
+    /**
      * Guess getter name
      *
      * Guess the getter method name for the given property. Will return null if no getter can be found
