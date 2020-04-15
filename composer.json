@@ -4,12 +4,12 @@
 	"type" : "library",
 	"require" : {
 		"php": "^7.2",
-		"phpunit/phpunit" : "^8"
+		"phpunit/phpunit" : "^8 | ^9@stable"
 	},
 	"require-dev": {
-		"phpmd/phpmd": "^2.6",
-		"squizlabs/php_codesniffer": "^3.4",
-		"sebastian/phpcpd": "^4"
+		"phpmd/phpmd": ">=2.6@stable",
+		"squizlabs/php_codesniffer": ">=3.4@stable",
+		"sebastian/phpcpd": ">=4@stable"
 	},
 	"license" : "MIT",
 	"authors" : [{

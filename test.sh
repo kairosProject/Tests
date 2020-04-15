@@ -67,25 +67,25 @@ function do_test {
 }
 
 do_test "$COMPOSER_PATH install" INSTALL 100
-echo "$TEST_RES" >> doc/composer.txt
+echo "$TEST_RES" >> build/composer.txt
 
 runner "$PHP_PATH vendor/bin/phpcbf --standard=./csruleset.xml $SOURCE_PATH"
-echo "$TEST_RES" >> doc/phpcbf.txt
+echo "$TEST_RES" >> build/phpcbf.txt
 
 do_test "$PHP_PATH vendor/bin/phpcs --standard=./csruleset.xml $SOURCE_PATH" PHPCS 100
-echo "$TEST_RES" > doc/phpcs.txt
+echo "$TEST_RES" > build/phpcs.txt
 
 do_test "$COMPOSER_PATH validate" COMPOSER 100
-echo "$TEST_RES" > doc/composer.txt
+echo "$TEST_RES" > build/composer.txt
 
 do_test "$PHP_PATH vendor/bin/phpmd $SOURCE_PATH text ./phpmd.xml" PHPMD 100
-echo "$TEST_RES" > doc/phpmd.txt
+echo "$TEST_RES" > build/phpmd.txt
 
 do_test "$PHP_PATH vendor/bin/phpunit" PHPUNIT 100
-echo "$TEST_RES" > doc/phpunit.txt
+echo "$TEST_RES" > build/phpunit.txt
 
 do_test "$PHP_PATH vendor/bin/phpcpd $SOURCE_PATH" PHPCPD 1
-echo "$TEST_RES" > doc/phpcpd.txt
+echo "$TEST_RES" > build/phpcpd.txt
 
 if [[ "$STATUS" -eq 0 ]]
 then
