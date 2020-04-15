@@ -79,6 +79,35 @@ class MyClassTest extends AbstractTestClass
 }
 ```
 
+> Since version 2.3
+
+It is also possible to make more complex assertion by providing a user defined constraint using the 
+`KairosProject\Constrait\InjectionConstraint` class.
+
+Here an example of data that is injected in an array by the constructor before be stored in the property :
+```php
+class MyClassTest extends AbstractTestClass
+{
+    /**
+     * Test constructor
+     *
+     * This method validate the constructor of the MyClass class.
+     *
+     * @return void
+     */
+    public function testConstruct()
+    {
+        $this->assertConstructor(
+            [
+                'modifiedInjection' => new InjectionConstraint(true, $this->equalTo([true]))
+            ]
+        );
+    }
+    
+    [...]
+}
+```
+
 ### Access a protected or private method
 
 To access a private or protected method, the `getClassMethod('name')` can be used. It will return an instance of 

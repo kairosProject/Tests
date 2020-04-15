@@ -16,6 +16,9 @@ declare(strict_types=1);
  */
 namespace KairosProject\Tests;
 
+use Error;
+use KairosProject\Constrait\InjectionConstraint;
+use PHPUnit\Framework\Constraint\Constraint;
 use PHPUnit\Framework\MockObject\Builder\InvocationMocker;
 use PHPUnit\Framework\MockObject\Matcher\Invocation;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -48,6 +51,48 @@ abstract class AbstractTestClass extends TestCase
      * @var ReflectionClass
      */
     protected $classReflection;
+
+    /**
+     * Assert properties equals
+     *
+     * Validate the properties are equals than expected property value map
+     *
+     * @param object $instance      The instance to validate
+     * @param array  $propertyValue The property value associative array
+     *
+     * @return void
+     * @throws ReflectionException
+     */
+    public function assertPropertiesEqual($instance, array $propertyValue): void
+    {
+        foreach ($propertyValue as $property => $value) {
+            $this->assertEquals(
+                $value,
+                $this->getClassProperty($property)->getValue($instance)
+            );
+        }
+    }
+
+    /**
+     * Assert properties same
+     *
+     * Validate the properties are same than expected property value map
+     *
+     * @param object $instance      The instance to validate
+     * @param array  $propertyValue The property value associative array
+     *
+     * @return void
+     * @throws ReflectionException
+     */
+    public function assertPropertiesSame($instance, array $propertyValue): void
+    {
+        foreach ($propertyValue as $property => $value) {
+            $this->assertSame(
+                $value,
+                $this->getClassProperty($property)->getValue($instance)
+            );
+        }
+    }
 
     /**
      * Setup
@@ -389,12 +434,21 @@ abstract class AbstractTestClass extends TestCase
      */
     protected function assertConstructor(array $constructorArguments, array $optionals = [])
     {
-        $instance = $this->classReflection->newInstanceArgs(array_values($constructorArguments));
+        $instance = $this->buildInstance($constructorArguments);
 
         foreach (array_merge($constructorArguments, $optionals) as $property => $value) {
             if (preg_match('/^same:/', $property)) {
                 $property = substr($property, strlen('same:'));
                 $this->assertSame($value, $this->getClassProperty($property)->getValue($instance));
+
+                continue;
+            }
+
+            if ($value instanceof Constraint) {
+                $this->assertThat(
+                    $this->getClassProperty($property)->getValue($instance),
+                    $value
+                );
 
                 continue;
             }
@@ -434,44 +488,26 @@ abstract class AbstractTestClass extends TestCase
     }
 
     /**
-     * Assert properties equals
+     * Build instance
      *
-     * Validate the properties are equals than expected property value map
+     * Build a new fresh instance
      *
-     * @param object $instance      The instance to validate
-     * @param array  $propertyValue The property value associative array
+     * @param array $injection The injection array
      *
-     * @throws ReflectionException
-     * @return void
+     * @return object
      */
-    public function assertPropertiesEqual($instance, array $propertyValue): void
+    private function buildInstance(array $injection = [])
     {
-        foreach ($propertyValue as $property => $value) {
-            $this->assertEquals(
-                $value,
-                $this->getClassProperty($property)->getValue($instance)
-            );
+        foreach ($injection as $propertyName => $value) {
+            if ($value instanceof InjectionConstraint) {
+                $injection[$propertyName] = $value->getValue();
+            }
         }
-    }
 
-    /**
-     * Assert properties same
-     *
-     * Validate the properties are same than expected property value map
-     *
-     * @param object $instance      The instance to validate
-     * @param array  $propertyValue The property value associative array
-     *
-     * @throws ReflectionException
-     * @return void
-     */
-    public function assertPropertiesSame($instance, array $propertyValue): void
-    {
-        foreach ($propertyValue as $property => $value) {
-            $this->assertSame(
-                $value,
-                $this->getClassProperty($property)->getValue($instance)
-            );
+        try {
+            return $this->classReflection->newInstanceArgs(array_values($injection));
+        } catch (Error $exception) {
+            $this->fail($exception->getMessage());
         }
     }
 

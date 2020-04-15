@@ -16,10 +16,12 @@ declare(strict_types=1);
  */
 namespace KairosProject\Tests\Test\Accessor;
 
+use KairosProject\Constrait\InjectionConstraint;
 use KairosProject\Tests\AbstractTestClass;
 use KairosProject\Tests\Test\Stub\AccessorClass;
 use KairosProject\Tests\Test\Stub\MethodClass;
 use PHPUnit\Framework\AssertionFailedError;
+use PHPUnit\Framework\Constraint\Callback;
 use ReflectionException;
 use stdClass;
 
@@ -35,6 +37,7 @@ use stdClass;
  * @author   matthieu vallance <matthieu.vallance@cscfa.fr>
  * @license  MIT <https://opensource.org/licenses/MIT>
  * @link     http://cscfa.fr
+ * @covers   \KairosProject\Tests\AbstractTestClass
  */
 class Test extends AbstractTestClass
 {
@@ -43,8 +46,8 @@ class Test extends AbstractTestClass
      *
      * Validate the assertPropertiesSame method of the tested class
      *
-     * @throws ReflectionException
      * @return void
+     * @throws ReflectionException
      */
     public function testAssertPropertiesSame(): void
     {
@@ -59,7 +62,7 @@ class Test extends AbstractTestClass
                 ['accessorProperty' => new stdClass(), 'getterProperty' => true, 'setterProperty' => 12]
             );
             $this->fail();
-        } catch(AssertionFailedError $exception) {
+        } catch (AssertionFailedError $exception) {
             $this->assertTrue(true);
         }
     }
@@ -69,8 +72,8 @@ class Test extends AbstractTestClass
      *
      * Validate the assertPropertiesEqual method of the tested class
      *
-     * @throws ReflectionException
      * @return void
+     * @throws ReflectionException
      */
     public function testAssertPropertiesEqual(): void
     {
@@ -87,7 +90,7 @@ class Test extends AbstractTestClass
                 ['accessorProperty' => new stdClass(), 'getterProperty' => true, 'setterProperty' => 15]
             );
             $this->fail();
-        } catch(AssertionFailedError $exception) {
+        } catch (AssertionFailedError $exception) {
             $this->assertTrue(true);
         }
     }
@@ -308,6 +311,74 @@ class Test extends AbstractTestClass
             $this->fail();
         } catch (AssertionFailedError $exception) {
             $this->assertEquals('Failed asserting that false matches expected true.', $exception->getMessage());
+        }
+
+        $class = new stdClass();
+        $class->test = 'data';
+        $this->assertConstructor(
+            [
+                'accessorProperty' => new InjectionConstraint(
+                    $class, new Callback(
+                    function ($class) {
+                        return $class->test == 'data';
+                    }
+                )
+                ),
+                'getterProperty' => new InjectionConstraint('getter', $this->equalTo('getter')),
+                'setterProperty' => new InjectionConstraint('setter', $this->stringStartsWith('set'))
+            ],
+            [
+                'boolProperty' => new InjectionConstraint(false, $this->isFalse())
+            ]
+        );
+
+        $this->assertConstructor(
+            [
+                'accessorProperty' => new InjectionConstraint(
+                    $class, new Callback(
+                    function ($class) {
+                        return $class->test == 'data';
+                    }
+                )
+                ),
+                'getterProperty' => new InjectionConstraint('getter', $this->equalTo('getter')),
+                'setterProperty' => new InjectionConstraint('setter', $this->stringStartsWith('set'))
+            ],
+            [
+                'boolProperty' => new InjectionConstraint(true, $this->isFalse())
+            ]
+        );
+
+        try {
+            $this->assertConstructor(
+                [
+                    'accessorProperty' => new InjectionConstraint(
+                        $class, new Callback(
+                                  function ($class) {
+                                      return $class->test == 'data';
+                                  }
+                              )
+                    ),
+                    'getterProperty' => new InjectionConstraint('getter', $this->equalTo('getter')),
+                    'setterProperty' => new InjectionConstraint('setter', $this->stringStartsWith('get'))
+                ]
+            );
+            $this->fail();
+        } catch (AssertionFailedError $exception) {
+            $this->assertEquals('Failed asserting that \'setter\' starts with "get".', $exception->getMessage());
+        }
+
+        try {
+            $this->assertConstructor(['accessorProperty' => true]);
+            $this->fail();
+        } catch (AssertionFailedError $exception) {
+            $this->assertEquals(
+                sprintf(
+                    'Too few arguments to function %s::__construct(), 1 passed and exactly 3 expected',
+                    AccessorClass::class
+                ),
+                $exception->getMessage()
+            );
         }
     }
 
