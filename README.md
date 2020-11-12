@@ -275,7 +275,7 @@ class MyClassTest extends AbstractTestClass
         $instance->setDate($date);
 
         $this->assertPropertiesSame($instance, ['date' => $date]);
-        $this->assertPropertiesEquals(
+        $this->assertPropertiesEqual(
             $instance, 
             ['subject' => 'Test subject', 'email' => 'matthieu.vallance@exemple.org']
         );
