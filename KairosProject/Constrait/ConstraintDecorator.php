@@ -56,6 +56,8 @@ class ConstraintDecorator extends Constraint
 
     /**
      * Returns a string representation of the object.
+     *
+     * @return string
      */
     public function toString(): string
     {
@@ -72,6 +74,11 @@ class ConstraintDecorator extends Constraint
      * a boolean value instead: true in case of success, false in case of a
      * failure.
      *
+     * @param mixed  $other        The other parameter
+     * @param string $description  The evaluation description
+     * @param bool   $returnResult Define if an exception must be thrown on failure, or if null has to be returned
+     *
+     * @return bool|null
      * @throws ExpectationFailedException
      * @throws InvalidArgumentException
      */
@@ -82,6 +89,8 @@ class ConstraintDecorator extends Constraint
 
     /**
      * Counts the number of constraint elements.
+     *
+     * @return int
      */
     public function count(): int
     {

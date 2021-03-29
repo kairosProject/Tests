@@ -3,7 +3,7 @@
 	"description" : "A simple phpunit test helper",
 	"type" : "library",
 	"require" : {
-		"php": "^7.2",
+		"php": "^7.2 | ^8.0",
 		"phpunit/phpunit" : "^8 | ^9@stable"
 	},
 	"require-dev": {
