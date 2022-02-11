@@ -14,6 +14,7 @@ declare(strict_types=1);
  * @license  MIT <https://opensource.org/licenses/MIT>
  * @link     http://cscfa.fr
  */
+
 namespace KairosProject\Tests;
 
 use Error;
@@ -57,39 +58,116 @@ abstract class AbstractTestClass extends TestCase
      *
      * Validate the properties are equals than expected property value map
      *
-     * @param object $instance      The instance to validate
-     * @param array  $propertyValue The property value associative array
+     * @param object      $instance      The instance to validate
+     * @param array       $propertyValue The property value associative array
+     * @param string|null $class         The class from where the property is extracted
      *
      * @return void
      * @throws ReflectionException
      */
-    public function assertPropertiesEqual($instance, array $propertyValue): void
+    public function assertPropertiesEqual($instance, array $propertyValue, string $class = null): void
     {
         foreach ($propertyValue as $property => $value) {
             $this->assertEquals(
                 $value,
-                $this->getClassProperty($property)->getValue($instance)
+                $this->getClassProperty($property, true, $class)->getValue($instance)
             );
         }
     }
+
+    /**
+     * Get class property
+     *
+     * Return an instance of ReflectionProperty for a given property name
+     *
+     * @param string      $property   The property name to reflex
+     * @param bool        $accessible The accessibility state of the property
+     * @param string|null $class      The class from where the property is extracted
+     *
+     * @return ReflectionProperty
+     * @throws ReflectionException
+     */
+    protected function getClassProperty(
+        string $property,
+        bool $accessible = true,
+        string $class = null
+    ): ?ReflectionProperty {
+        $propertyReflex = $this->createPropertyReflection(
+            $class ?? $this->classReflection->getName(),
+            $property
+        );
+
+        if (!$propertyReflex) {
+            $this->fail(
+                sprintf(
+                    'The class "%s" is expected to store the property "%s"',
+                    $this->getTestedClass(),
+                    $property
+                )
+            );
+        }
+        $propertyReflex->setAccessible($accessible);
+
+        return $propertyReflex;
+    }
+
+    /**
+     * Create property reflection
+     *
+     * Return a reflection property, according to the instance class name and property. Abble to follow the
+     * inheritance tree to find the property.
+     *
+     * @param string $instanceClassName The base instance class name
+     * @param string $property          The property name to find
+     *
+     * @return ReflectionProperty|NULL
+     * @throws ReflectionException
+     */
+    protected function createPropertyReflection(string $instanceClassName, string $property): ?ReflectionProperty
+    {
+        $reflectionClass = new ReflectionClass($instanceClassName);
+
+        if ($reflectionClass->hasProperty($property)) {
+            $propertyReflection = $reflectionClass->getProperty($property);
+
+            return $propertyReflection;
+        }
+
+        $parentClass = $reflectionClass->getParentClass();
+        if (!$parentClass) {
+            return null;
+        }
+
+        return $this->createPropertyReflection($parentClass->getName(), $property);
+    }
+
+    /**
+     * Get tested class
+     *
+     * Return the tested class name
+     *
+     * @return string
+     */
+    abstract protected function getTestedClass(): string;
 
     /**
      * Assert properties same
      *
      * Validate the properties are same than expected property value map
      *
-     * @param object $instance      The instance to validate
-     * @param array  $propertyValue The property value associative array
+     * @param object      $instance      The instance to validate
+     * @param array       $propertyValue The property value associative array
+     * @param string|null $class         The class from where the property is extracted
      *
      * @return void
      * @throws ReflectionException
      */
-    public function assertPropertiesSame($instance, array $propertyValue): void
+    public function assertPropertiesSame($instance, array $propertyValue, string $class = null): void
     {
         foreach ($propertyValue as $property => $value) {
             $this->assertSame(
                 $value,
-                $this->getClassProperty($property)->getValue($instance)
+                $this->getClassProperty($property, true, $class)->getValue($instance)
             );
         }
     }
@@ -107,15 +185,6 @@ abstract class AbstractTestClass extends TestCase
     {
         $this->classReflection = new ReflectionClass($this->getTestedClass());
     }
-
-    /**
-     * Get tested class
-     *
-     * Return the tested class name
-     *
-     * @return string
-     */
-    abstract protected function getTestedClass(): string;
 
     /**
      * Get invocation builder
@@ -163,6 +232,47 @@ abstract class AbstractTestClass extends TestCase
     }
 
     /**
+     * Guess getter name
+     *
+     * Guess the getter method name for the given property. Will return null if no getter can be found
+     *
+     * @param string               $property The property fo which guess the getter method name
+     * @param ReflectionClass|null $class    The class from which find the getter method
+     *
+     * @return string|null
+     */
+    private function guessGetterName(string $property, ReflectionClass $class = null)
+    {
+        if (substr($property, 0, strlen('same:')) === 'same:') {
+            $property = substr($property, strlen('same:'));
+        }
+
+        if (!$class) {
+            $class = $this->classReflection;
+        }
+
+        $suffix = ucfirst($property);
+        $getter = sprintf('get%s', $suffix);
+        $isser = sprintf('is%s', $suffix);
+
+        if (!$class->hasMethod($getter) && !$class->hasMethod($isser)) {
+            $parent = $class->getParentClass();
+
+            if (!$parent) {
+                return null;
+            }
+
+            return $this->guessGetterName($property, $parent);
+        }
+
+        if ($class->hasMethod($getter)) {
+            return $getter;
+        }
+
+        return $isser;
+    }
+
+    /**
      * Assert public method
      *
      * Assert a method to be public in current tested class
@@ -204,6 +314,36 @@ abstract class AbstractTestClass extends TestCase
         $methodReflex->setAccessible($accessible);
 
         return $methodReflex;
+    }
+
+    /**
+     * Create method reflection
+     *
+     * Return a reflection method, according to the instance class name and mathod. Abble to follow the
+     * inheritance tree to find the property.
+     *
+     * @param string $instanceClassName The base instance class name
+     * @param string $method            The method name to find
+     *
+     * @return ReflectionMethod|NULL
+     * @throws ReflectionException
+     */
+    private function createMethodReflection(string $instanceClassName, string $method): ?ReflectionMethod
+    {
+        $reflectionClass = new ReflectionClass($instanceClassName);
+
+        if ($reflectionClass->hasMethod($method)) {
+            $methodReflection = $reflectionClass->getMethod($method);
+
+            return $methodReflection;
+        }
+
+        $parentClass = $reflectionClass->getParentClass();
+        if (!$parentClass) {
+            return null;
+        }
+
+        return $this->createMethodReflection($parentClass->getName(), $method);
     }
 
     /**
@@ -269,65 +409,6 @@ abstract class AbstractTestClass extends TestCase
         $this->assertEquals($expected, $method->invoke($instance));
 
         return;
-    }
-
-    /**
-     * Get class property
-     *
-     * Return an instance of ReflectionProperty for a given property name
-     *
-     * @param string $property   The property name to reflex
-     * @param bool   $accessible The accessibility state of the property
-     *
-     * @return ReflectionProperty
-     * @throws ReflectionException
-     */
-    protected function getClassProperty(string $property, bool $accessible = true): ?ReflectionProperty
-    {
-        $propertyReflex = $this->createPropertyReflection($this->classReflection->getName(), $property);
-
-        if (!$propertyReflex) {
-            $this->fail(
-                sprintf(
-                    'The class "%s" is expected to store the property "%s"',
-                    $this->getTestedClass(),
-                    $property
-                )
-            );
-        }
-        $propertyReflex->setAccessible($accessible);
-
-        return $propertyReflex;
-    }
-
-    /**
-     * Create property reflection
-     *
-     * Return a reflection property, according to the instance class name and property. Abble to follow the
-     * inheritance tree to find the property.
-     *
-     * @param string $instanceClassName The base instance class name
-     * @param string $property          The property name to find
-     *
-     * @return ReflectionProperty|NULL
-     * @throws ReflectionException
-     */
-    protected function createPropertyReflection(string $instanceClassName, string $property): ?ReflectionProperty
-    {
-        $reflectionClass = new ReflectionClass($instanceClassName);
-
-        if ($reflectionClass->hasProperty($property)) {
-            $propertyReflection = $reflectionClass->getProperty($property);
-
-            return $propertyReflection;
-        }
-
-        $parentClass = $reflectionClass->getParentClass();
-        if (!$parentClass) {
-            return null;
-        }
-
-        return $this->createPropertyReflection($parentClass->getName(), $property);
     }
 
     /**
@@ -458,6 +539,30 @@ abstract class AbstractTestClass extends TestCase
     }
 
     /**
+     * Build instance
+     *
+     * Build a new fresh instance
+     *
+     * @param array $injection The injection array
+     *
+     * @return object
+     */
+    private function buildInstance(array $injection = [])
+    {
+        foreach ($injection as $propertyName => $value) {
+            if ($value instanceof InjectionConstraint) {
+                $injection[$propertyName] = $value->getValue();
+            }
+        }
+
+        try {
+            return $this->classReflection->newInstanceArgs(array_values($injection));
+        } catch (Error $exception) {
+            $this->fail($exception->getMessage());
+        }
+    }
+
+    /**
      * Assert protected method
      *
      * Assert a method to be protected in current tested class
@@ -485,100 +590,5 @@ abstract class AbstractTestClass extends TestCase
     protected function assertPrivateMethod(string $methodName): void
     {
         $this->assertTrue($this->getClassMethod($methodName)->isPrivate());
-    }
-
-    /**
-     * Build instance
-     *
-     * Build a new fresh instance
-     *
-     * @param array $injection The injection array
-     *
-     * @return object
-     */
-    private function buildInstance(array $injection = [])
-    {
-        foreach ($injection as $propertyName => $value) {
-            if ($value instanceof InjectionConstraint) {
-                $injection[$propertyName] = $value->getValue();
-            }
-        }
-
-        try {
-            return $this->classReflection->newInstanceArgs(array_values($injection));
-        } catch (Error $exception) {
-            $this->fail($exception->getMessage());
-        }
-    }
-
-    /**
-     * Guess getter name
-     *
-     * Guess the getter method name for the given property. Will return null if no getter can be found
-     *
-     * @param string               $property The property fo which guess the getter method name
-     * @param ReflectionClass|null $class    The class from which find the getter method
-     *
-     * @return string|null
-     */
-    private function guessGetterName(string $property, ReflectionClass $class = null)
-    {
-        if (substr($property, 0, strlen('same:')) === 'same:') {
-            $property = substr($property, strlen('same:'));
-        }
-
-        if (!$class) {
-            $class = $this->classReflection;
-        }
-
-        $suffix = ucfirst($property);
-        $getter = sprintf('get%s', $suffix);
-        $isser = sprintf('is%s', $suffix);
-
-        if (!$class->hasMethod($getter) && !$class->hasMethod($isser)) {
-            $parent = $class->getParentClass();
-
-            if (!$parent) {
-                return null;
-            }
-
-            return $this->guessGetterName($property, $parent);
-        }
-
-        if ($class->hasMethod($getter)) {
-            return $getter;
-        }
-
-        return $isser;
-    }
-
-    /**
-     * Create method reflection
-     *
-     * Return a reflection method, according to the instance class name and mathod. Abble to follow the
-     * inheritance tree to find the property.
-     *
-     * @param string $instanceClassName The base instance class name
-     * @param string $method            The method name to find
-     *
-     * @return ReflectionMethod|NULL
-     * @throws ReflectionException
-     */
-    private function createMethodReflection(string $instanceClassName, string $method): ?ReflectionMethod
-    {
-        $reflectionClass = new ReflectionClass($instanceClassName);
-
-        if ($reflectionClass->hasMethod($method)) {
-            $methodReflection = $reflectionClass->getMethod($method);
-
-            return $methodReflection;
-        }
-
-        $parentClass = $reflectionClass->getParentClass();
-        if (!$parentClass) {
-            return null;
-        }
-
-        return $this->createMethodReflection($parentClass->getName(), $method);
     }
 }

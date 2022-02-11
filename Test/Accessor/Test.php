@@ -19,6 +19,7 @@ namespace KairosProject\Tests\Test\Accessor;
 use KairosProject\Constrait\InjectionConstraint;
 use KairosProject\Tests\AbstractTestClass;
 use KairosProject\Tests\Test\Stub\AccessorClass;
+use KairosProject\Tests\Test\Stub\IsserClass;
 use KairosProject\Tests\Test\Stub\MethodClass;
 use PHPUnit\Framework\AssertionFailedError;
 use PHPUnit\Framework\Constraint\Callback;
@@ -56,6 +57,12 @@ class Test extends AbstractTestClass
 
         $this->assertPropertiesSame($this->getInstance($injection), $injection);
 
+        $this->assertPropertiesSame(
+            new IsserClass('accessorProperty', null, null),
+            ['accessorProperty' => 'accessorProperty'],
+            IsserClass::class
+        );
+
         try {
             $this->assertPropertiesSame(
                 $this->getInstance($injection),
@@ -82,6 +89,12 @@ class Test extends AbstractTestClass
         $this->assertPropertiesEqual(
             $this->getInstance($injection),
             ['accessorProperty' => new stdClass(), 'getterProperty' => true, 'setterProperty' => 12]
+        );
+
+        $this->assertPropertiesEqual(
+            new IsserClass('accessorProperty', null, null),
+            ['accessorProperty' => 'accessorProperty'],
+            IsserClass::class
         );
 
         try {
