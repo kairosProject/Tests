@@ -537,6 +537,32 @@ class Test extends AbstractTestClass
     }
 
     /**
+     * Validate the capability to set up the tested class at runtime
+     *
+     * @return void
+     * @throws ReflectionException
+     */
+    public function testTestWithInstanceOf(): void
+    {
+        $this->assertEquals($this->getTestedClass(), $this->classReflection->getName());
+
+        $this->testWithInstanceOf(stdClass::class);
+
+        $this->assertEquals(stdClass::class, $this->classReflection->getName());
+    }
+
+    /**
+     * Ensure the runtime defined tested class is reset after test
+     *
+     * @return void
+     * @depends testTestWithInstanceOf
+     */
+    public function testClassInstanceIsReset()
+    {
+        $this->assertEquals($this->getTestedClass(), $this->classReflection->getName());
+    }
+
+    /**
      * Get tested class
      *
      * Return the tested class name

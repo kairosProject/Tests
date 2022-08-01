@@ -93,7 +93,7 @@ abstract class AbstractTestClass extends TestCase
         string $class = null
     ): ?ReflectionProperty {
         $propertyReflex = $this->createPropertyReflection(
-            $class ?? $this->classReflection->getName(),
+            ($class ?? $this->classReflection->getName()),
             $property
         );
 
@@ -183,7 +183,20 @@ abstract class AbstractTestClass extends TestCase
      */
     protected function setUp(): void
     {
-        $this->classReflection = new ReflectionClass($this->getTestedClass());
+        $this->testWithInstanceOf($this->getTestedClass());
+    }
+
+    /**
+     * Update the class used as base instance
+     *
+     * @param string $classname The name of the class the test is expected to validate
+     *
+     * @return void
+     * @throws ReflectionException
+     */
+    protected function testWithInstanceOf(string $classname): void
+    {
+        $this->classReflection = new ReflectionClass($classname);
     }
 
     /**
