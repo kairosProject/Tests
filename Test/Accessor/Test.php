@@ -546,7 +546,7 @@ class Test extends AbstractTestClass
     {
         $this->assertEquals($this->getTestedClass(), $this->classReflection->getName());
 
-        $this->testWithInstanceOf(stdClass::class);
+        $this->runTestWithInstanceOf(stdClass::class);
 
         $this->assertEquals(stdClass::class, $this->classReflection->getName());
     }

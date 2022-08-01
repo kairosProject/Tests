@@ -183,7 +183,7 @@ abstract class AbstractTestClass extends TestCase
      */
     protected function setUp(): void
     {
-        $this->testWithInstanceOf($this->getTestedClass());
+        $this->runTestWithInstanceOf($this->getTestedClass());
     }
 
     /**
@@ -194,7 +194,7 @@ abstract class AbstractTestClass extends TestCase
      * @return void
      * @throws ReflectionException
      */
-    protected function testWithInstanceOf(string $classname): void
+    protected function runTestWithInstanceOf(string $classname): void
     {
         $this->classReflection = new ReflectionClass($classname);
     }

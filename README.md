@@ -287,7 +287,7 @@ class MyClassTest extends AbstractTestClass
 
 ## Set up the tested class at runtime
 
-In specific cases it is possible to see the need of defining the tested class at runtime. For this specific purpose, it is possible to use the `testWithInstanceOf` method.
+In specific cases it is possible to see the need of defining the tested class at runtime. For this specific purpose, it is possible to use the `runTestWithInstanceOf` method.
 
 ```php
 class MyClassTest extends AbstractTestClass
@@ -302,7 +302,7 @@ class MyClassTest extends AbstractTestClass
     public function testSpecificClass(): void
     {
         $baseInstance = $this->getInstance();
-        $this->testWithInstanceOf(SUT::class);
+        $this->runTestWithInstanceOf(SUT::class);
         $specificInstance = $this->getInstance();
         
         $this->assertInstanceOf($this->getTestedClass(), $baseInstance);
